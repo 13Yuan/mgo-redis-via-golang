@@ -1,5 +1,4 @@
-FROM golang
-EXPOSE 6767
+FROM golang:1.8
 RUN mkdir -p /go/src/MA.Content.Services.OrgMapper
 WORKDIR /go/src/MA.Content.Services.OrgMapper
 COPY . /go/src/MA.Content.Services.OrgMapper

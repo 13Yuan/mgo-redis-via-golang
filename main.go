@@ -9,7 +9,7 @@ func main() {
 	r := gin.Default()
 	orgMapper := r.Group("orgmapper")
 	routers.InitRoutes(orgMapper);
-	r.Run(":6767")
+	r.Run(":9092")
 }
 
 // func basicAuth(username, password string) string {
