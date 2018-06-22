@@ -4,6 +4,7 @@ import (
 	"github.com/astaxie/goredis"
 	. "MA.Content.Services.OrgMapper/src/models"
 	"encoding/json"
+	"os"
 )
 
 func formatJson(val []byte, or interface{}) {
@@ -15,11 +16,12 @@ func formatJson(val []byte, or interface{}) {
 
 func GetIdentifiers(ch chan Identifier, m_id, m_type string) {
 	var client goredis.Client
-	client.Addr = "APC-LBMDCRED202:6804"
+	client.Addr = os.Getenv("REDIS_CONNECTION")
 	client.Db = 0
 	val, err := client.Get(m_type + "-" + m_id)
 	if err != nil {
-		panic(err)
+		ch <- Identifier{}
+		return
 	}
 	var or OrgRefrence
 	formatJson(val, &or)
