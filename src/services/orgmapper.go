@@ -14,7 +14,23 @@ func formatJson(val []byte, or interface{}) {
 	}
 }
 
-func GetIdentifiers(ch chan Identifier, m_id, m_type string) {
+func getReferenceId(dbIdx int, or OrgRefrence) string {
+	var result string
+	switch dbIdx {
+		case 1: {
+			result = or.Mappings[0].OrgRefrenceId
+		}
+		case 2: {
+			result = or.Mappings[0].InstRefrenceId
+		}
+		case 3: {
+			result = or.Mappings[0].SaleRefrenceId
+		}
+	}
+	return result
+}
+
+func GetIdentifiers(ch chan Identifier, m_id, m_type string, dbIdx int) {
 	var client goredis.Client
 	client.Addr = os.Getenv("REDIS_CONNECTION")
 	client.Db = 0
@@ -25,9 +41,21 @@ func GetIdentifiers(ch chan Identifier, m_id, m_type string) {
 	}
 	var or OrgRefrence
 	formatJson(val, &or)
-	client.Db = 1
-	val, _ = client.Get(or.Mappings[0].OrgRefrenceId)
+	client.Db = dbIdx
+	val, _ = client.Get(getReferenceId(dbIdx, or))
 	var id Identifier
-	formatJson(val, &id)
+	if val != nil && len(val) > 0 {
+		formatJson(val, &id)
+	}
 	ch <- id
+}
+
+func Test() OrgRefrence {
+	var client goredis.Client
+	client.Addr = os.Getenv("REDIS_CONNECTION")
+	client.Db = 0
+	val, _ := client.Get("mdy_id-541000")
+	var or OrgRefrence
+	formatJson(val, &or)
+	return or
 }
