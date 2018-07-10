@@ -2,14 +2,63 @@ package handlers
 
 import (
 	"github.com/gin-gonic/gin"
+	"github.com/FZambia/sentinel"
+	"github.com/gomodule/redigo/redis"
 	services "MA.Content.Services.OrgMapper/src/services"
 	. "MA.Content.Services.OrgMapper/src/models"
 	"fmt"
+	"time"
+	"errors"
 )
+func newSentinelPool() *redis.Pool {
+	sntnl := &sentinel.Sentinel{
+		Addrs: []string{"APC-LBMDCRED201:5000"},
+		MasterName: "redis-eai-mongo",
+		Dial: func(addr string) (redis.Conn, error) {
+			timeout := 500 * time.Millisecond
+			c, err := redis.DialTimeout("tcp", addr, timeout, timeout, timeout)
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
+		},
+	}
+	return &redis.Pool{
+		MaxIdle:     3,
+		MaxActive:   64,
+		Wait:        true,
+		IdleTimeout: 240 * time.Second,
+		Dial: func() (redis.Conn, error) {
+			masterAddr, err := sntnl.MasterAddr()
+			if err != nil {
+				return nil, err
+			}
+			c, err := redis.Dial("tcp", masterAddr)
+			if err != nil {
+				return nil, err
+			}
+			return c, nil
+		},
+		TestOnBorrow: func(c redis.Conn, t time.Time) error {
+			if !sentinel.TestRole(c, "master") {
+				return errors.New("Role check failed")
+			} else {
+				return nil
+			}
+		},
+	}
+}
+
+func createClient() redis.Conn {
+	client, _ := newSentinelPool().Dial()
+	return client
+}
 
 func loopGetIndentifiers(ch chan Identifier, m_id string, types []string, dbIdx int) {
+	client := createClient()
+	services.GetIdentifiersAll(client, ch, m_id, types, dbIdx)
 	for i := 0; i < len(types); i++ {
-		go services.GetIdentifiers(ch, m_id, types[i], dbIdx)
+		go services.GetIdentifiers(client, ch, m_id, types[i], dbIdx)
 	}
 }
 
@@ -73,12 +122,13 @@ func GetAllIdentifiers(m_id string, types []string, dbIdx int) Identifier {
 	return concatedId
 }
 
-func GetIdentifiers(c *gin.Context) { 
+func GetIdentifiers1(c *gin.Context) { 
 	m_id := c.Param("id")
 	var result Identifier
 	if m_type := c.Param("type"); !IsFuzzySearch(m_type) {
-		ch := make(chan Identifier, 3)
-		go services.GetIdentifiers(ch, m_id, m_type, 1)
+		ch := make(chan Identifier, 1)
+		client := createClient()
+		go services.GetIdentifiers(client, ch, m_id, m_type, 1)
 		for i := 0; i < 1; i++ {
 			result = <- ch
 		}
@@ -90,8 +140,4 @@ func GetIdentifiers(c *gin.Context) {
 	}
 
 	c.JSON(200, result)
-}
-
-func Test(c *gin.Context) {
-	c.JSON(200, services.Test())
 }
