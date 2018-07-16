@@ -1,8 +1,8 @@
 package main
 
 import (
+	routers "om-api/src/routes"
 	"github.com/gin-gonic/gin"
-	routers "MA.Content.Services.OrgMapper/src/routers"
 )
 
 func main() {
