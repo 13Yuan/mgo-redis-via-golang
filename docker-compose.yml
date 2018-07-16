@@ -1,0 +1,40 @@
+version : "3"
+services:
+  api:
+    build: om-api/
+    ports:
+      - "9093:9093"
+    command: ["go", "run", "main.go"]
+    networks:
+      - om-net
+    links:
+      - redis
+    depends_on:
+      - tool
+      - redis
+  tool:
+    build: om-tool/
+    command: ["go", "run", "main.go"]
+    networks:
+      - om-net
+    links:
+      - redis
+    depends_on:
+      - redis
+  redis:
+    image: "redis"
+    restart: always
+    container_name: redis
+    sysctls:
+      net.core.somaxconn: '511'
+    volumes:
+      - redis-data:/data
+    networks:
+      - om-net
+    ports:
+      - "6379:6379"
+    entrypoint: redis-server
+networks:
+  om-net:
+volumes:
+  redis-data:
