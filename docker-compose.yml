@@ -15,6 +15,8 @@ services:
   tool:
     build: om-tool/
     command: ["go", "run", "main.go"]
+    environment:
+      - MONGO_DB=mongodb://eagle_app_user:eagleappuser@ftc-lbeagmdb306:27017,ftc-lbeagmdb307:27017,ftc-lbeagmdb308:27017/ODS
     networks:
       - om-net
     links:
