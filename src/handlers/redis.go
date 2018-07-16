@@ -1,8 +1,10 @@
 package handlers
 
 import (
-	"fmt"
-	db "MA.Content.Services.OrgMapper/src/db"
+	m "ma.content.services.orgmapper/src/models"
+	"net/http"
+	"encoding/json"
+	db "ma.content.services.orgmapper/src/db"
 	"github.com/gin-gonic/gin"
 	"strings"
 )
@@ -16,24 +18,26 @@ func generateKey(_type, id string) string {
 }
 
 func GetIdentifiers(c *gin.Context) {
-	var result string
+	var (
+		results []byte
+		identifers m.IdentifiersObj
+		err error
+		result []string
+	)
 	m_id := c.Param("id")
 	if m_type := c.Param("type"); !isFuzzySearch(m_type) {
-		results, err := db.Get(generateKey(m_type, m_id))
-		if err != nil {
-			result = "Get data error!"
-			fmt.Println(result)
-		} else {
-			result = strings.Join(results, ",")
-		}
+		result, err = db.Get(generateKey(m_type, m_id))
+		identifers.Count = len(result)
+		results, err = json.Marshal(result)
 	} else {
-		results, err := db.Get(m_id)
-		if err != nil {
-			result = "Get data error!"
-			fmt.Println(result)
-		} else {
-			result = strings.Join(results, ",")
-		}
+		result, err = db.Get(m_id)
+		identifers.Count = len(result)
+		results, err = json.Marshal(result)
 	}
-	c.JSON(200, result)
+	if err != nil {
+		c.JSON(http.StatusNoContent, "Get data error!")
+	} else {
+		json.Unmarshal(results, &identifers.Identifiers)
+		c.JSON(http.StatusOK, identifers)
+	}
 }

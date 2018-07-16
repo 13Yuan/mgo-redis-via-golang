@@ -9,5 +9,5 @@ func main() {
 	r := gin.Default()
 	orgMapper := r.Group("organization")
 	routers.InitRoutes(orgMapper);
-	r.Run(":9092")
+	r.Run(":9093")
 }

@@ -11,12 +11,12 @@ var (
 )
 
 func init() {
-	c, err := redis.Dial("tcp", ":6379")
+	c, err := redis.Dial("tcp", "OAC-LXMDCDEV207:6379")
 	if err != nil {
 		log.Fatal("error connect to redis!")
 	}
 	Conn = c
-	if _, err := Conn.Do("SELECT", 3); err != nil {
+	if _, err := Conn.Do("SELECT", 2); err != nil {
 		Conn.Close()
 	}
 }
