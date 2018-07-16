@@ -7,5 +7,5 @@ import (
 
 /*InitRoutes initial the routes for rating*/
 func InitRoutes(router *gin.RouterGroup) {
-	router.GET("identifiers/:type/:id", handler.GetIdentifiers)
+	router.GET("/:type/:id", handler.GetIdentifiers)
 }

@@ -7,7 +7,7 @@ import (
 
 func main() {
 	r := gin.Default()
-	orgMapper := r.Group("organization")
+	orgMapper := r.Group("identifiers")
 	routers.InitRoutes(orgMapper);
 	r.Run(":9093")
 }
