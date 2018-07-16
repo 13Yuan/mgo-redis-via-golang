@@ -15,7 +15,7 @@ var (
 func init() {
     redisHost := os.Getenv("REDIS_HOST")
     if redisHost == "" {
-        redisHost = "OAC-LXMDCDEV207:6379"
+        redisHost = "redis:6379"
     }
     if Pool == nil {
         Pool = newPool(redisHost)
