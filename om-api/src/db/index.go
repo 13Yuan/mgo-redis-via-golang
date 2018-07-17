@@ -11,7 +11,7 @@ var (
 )
 
 func init() {
-	c, err := redis.Dial("tcp", "oac-lxmdcdev207:6379")
+	c, err := redis.Dial("tcp", "redis:6379")
 	if err != nil {
 		log.Fatal("error connect to redis!")
 	}
