@@ -16,7 +16,7 @@ func init() {
 		log.Fatal("error connect to redis!")
 	}
 	Conn = c
-	if _, err := Conn.Do("SELECT", 0); err != nil {
+	if _, err := Conn.Do("SELECT", 2); err != nil {
 		Conn.Close()
 	}
 }

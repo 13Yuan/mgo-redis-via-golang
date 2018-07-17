@@ -19,7 +19,6 @@ func generateKey(_type, id string) string {
 
 func GetIdentifiers(c *gin.Context) {
 	var (
-		results []byte
 		identifers m.IdentifiersObj
 		err error
 		result []string
@@ -28,16 +27,25 @@ func GetIdentifiers(c *gin.Context) {
 	if m_type := c.Param("type"); !isFuzzySearch(m_type) {
 		result, err = db.Get(generateKey(m_type, m_id))
 		identifers.Count = len(result)
-		results, err = json.Marshal(result)
 	} else {
 		result, err = db.Get(m_id)
 		identifers.Count = len(result)
-		results, err = json.Marshal(result)
 	}
 	if err != nil {
 		c.JSON(http.StatusNoContent, "Get data error!")
 	} else {
-		json.Unmarshal(results, &identifers.Identifiers)
+		chs := make(chan bool, len(result))
+		for _, idStr := range result {
+			go func(iStr string){
+				var ide m.Identifier
+				json.Unmarshal([]byte(iStr), &ide)
+				identifers.Identifiers = append(identifers.Identifiers, ide)
+				chs <- true
+			}(idStr)
+		}
+		for i := 0; i < len(result); i++ {
+			<- chs
+		}
 		c.JSON(http.StatusOK, identifers)
 	}
 }
