@@ -34,18 +34,8 @@ func GetIdentifiers(c *gin.Context) {
 	if err != nil {
 		c.JSON(http.StatusNoContent, "Get data error!")
 	} else {
-		chs := make(chan bool, len(result))
-		for _, idStr := range result {
-			go func(iStr string){
-				var ide m.Identifier
-				json.Unmarshal([]byte(iStr), &ide)
-				identifers.Identifiers = append(identifers.Identifiers, ide)
-				chs <- true
-			}(idStr)
-		}
-		for i := 0; i < len(result); i++ {
-			<- chs
-		}
+		resultStr := "[" + strings.Join(result, ",") + "]"
+		json.Unmarshal([]byte(resultStr), &identifers.Identifiers)
 		c.JSON(http.StatusOK, identifers)
 	}
 }
