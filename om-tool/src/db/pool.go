@@ -32,7 +32,7 @@ func newPool(server string) *redis.Pool {
             if err != nil {
                 return nil, err
             }
-            if _, err := c.Do("SELECT", 0); err != nil {
+            if _, err := c.Do("SELECT", 2); err != nil {
                 c.Close()
                 return nil, err
               }

@@ -263,10 +263,29 @@ func loopSADDIdentifiers(keys []string, ids []IdentifiersObj) []KeyValue {
 	return newKVS
 }
 
+func addOrgIDToIdentifier(id IDs, ids []IdentifiersObj) []IdentifiersObj {
+	var org_ident IdentifiersObj
+	org_ident.Label = "org_id"
+	org_ident.Source = []string{}
+	org_ident.Value = strconv.Itoa(id.OrgID)
+	for _, _id := range ids {
+		if _id.Label == "org_id" && _id.Value == strconv.Itoa(id.OrgID) {
+			return ids
+		}
+	}
+	ids = append(ids, org_ident)
+	return ids
+}
+
 func transferDataOnlyInsert(ids []IDs) error {
 	var newKVS []KeyValue
 	for _, id := range ids {
 		var allKeys []string
+		if id.OrgID > 0 {
+			allKeys = append(allKeys, "org_id-" + strconv.Itoa(id.OrgID))
+			allKeys = append(allKeys, strconv.Itoa(id.OrgID))
+			id.Identifiers = addOrgIDToIdentifier(id, id.Identifiers)
+		}
 		for _, ident := range id.Identifiers {
 			key := generateKey(ident)
 			idKey := strings.Replace(ident.Value, " ", "", -1)
@@ -326,7 +345,7 @@ func handleCollection(collection string, mongoDb *mgo.Database,  _ch chan bool, 
 	for i := 0; i < gorouteNum; i++ {
 		go func(idx int) {
 			var ids []IDs
-			mongoDb.C(collection).Find(bson.M{"identifiers": bson.M{"$exists": 1}}).Skip(idx * loopCount + skip).Select(bson.M{"identifiers": 1}).Limit(loopCount).All(&ids)
+			mongoDb.C(collection).Find(bson.M{"identifiers": bson.M{"$exists": 1}}).Skip(idx * loopCount + skip).Select(bson.M{"identifiers": 1, "org_id": 1}).Limit(loopCount).All(&ids)
 			if err := transferDataOnlyInsert(ids); err != nil {
 				log.Printf("Error transfer data %v", err)
 			}

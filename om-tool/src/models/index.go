@@ -3,6 +3,7 @@ package models
 type (
 	IDs struct {
 		ID string `json:"_id" bson:"_id"`
+		OrgID int `json:"org_id" bson:"org_id"`
 		Identifiers []IdentifiersObj `json:"identifiers" bson:"identifiers"`
 	}
 	Sale struct {
